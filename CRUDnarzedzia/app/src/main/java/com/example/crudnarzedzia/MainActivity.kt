@@ -72,8 +72,7 @@ class MainActivity : AppCompatActivity()
 
             dpd.show()
 
-            if (dateTxt.text.toString() != date)
-                dateCheckBox.isChecked = false
+            dateCheckBox.isChecked = false
         }
     }
 
