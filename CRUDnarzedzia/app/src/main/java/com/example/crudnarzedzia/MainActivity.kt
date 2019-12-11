@@ -10,25 +10,25 @@ import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 import android.app.DatePickerDialog
+import android.graphics.PorterDuff
 import android.os.Build
 import android.widget.DatePicker
 import androidx.annotation.RequiresApi
 
 class MainActivity : AppCompatActivity()
 {
-
     internal var dbHelper = DatabaseHelper(this)
 
     fun showToast (text: String)
     {
-        Toast.makeText(this@MainActivity, text, Toast.LENGTH_LONG).show()
+        Toast.makeText(this@MainActivity, text, Toast.LENGTH_SHORT).show()
     }
 
-    fun showDialog(title: String, Message : String)
+    fun showDialog(Title: String, Message : String)
     {
         val builder = AlertDialog.Builder(this)
         builder.setCancelable(true)
-        builder.setTitle(title)
+        builder.setTitle(Title)
         builder.setMessage(Message)
         builder.show()
     }
@@ -58,7 +58,6 @@ class MainActivity : AppCompatActivity()
     @RequiresApi(Build.VERSION_CODES.N)
     fun pickDateFromDialog()
     {
-        var date = dateTxt.text.toString()
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
@@ -76,35 +75,43 @@ class MainActivity : AppCompatActivity()
         }
     }
 
-
-
     fun setCurrentDate()
     {
         dateCheckBox.setOnClickListener(View.OnClickListener {
             if (dateCheckBox.isChecked) {
-                val date = Calendar.getInstance().time
-                val formatter = SimpleDateFormat.getDateInstance() //or use getDateInstance()
-                val formatedDate = formatter.format(date)
-                dateTxt.setText(formatedDate.toString())
+                dateTxt.setText(currentDate())
             }
         })
     }
+
+    fun currentDate(): String {
+        val date = Calendar.getInstance().time
+        val formatter = SimpleDateFormat.getDateInstance() //or use getDateInstance()
+        val formatedDate = formatter.format(date)
+        return formatedDate
+    }
+
     fun handleInserts()
     {
         insertBtn.setOnClickListener()
         {
                 try
                 {
-                    if ((nameTxt.text.toString()!="")||(numberOfToolTxt.text.toString()!="")||(dateTxt.text.toString()!="") )
+                    if (nameTxt.text.isEmpty()||dateTxt.text.isEmpty())
                     {
+                        showDialog("Wypełnij pola", "Nazwa oraz Data pobrania.")
+                    }
+                    else
+                    {
+                        if (numberOfToolTxt.text.isEmpty())
+                            numberOfToolTxt.setText("Brak")
                         dbHelper.insertData(
                             nameTxt.text.toString(),
                             numberOfToolTxt.text.toString(),
                             dateTxt.text.toString())
                         clearEditTexts()
+                        showToast("Dodano")
                     }
-                    else
-                        showToast("Wypełnij pola")
                 }
                 catch (e: Exception)
                 {
@@ -118,23 +125,29 @@ class MainActivity : AppCompatActivity()
     {
         updateBtn.setOnClickListener()
         {
-            run {
-                try {
-                    val isUpdate = dbHelper.updateData(idTxt.text.toString(),
-                        nameTxt.text.toString(),
-                        numberOfToolTxt.text.toString(),
-                        dateTxt.text.toString())
-                    if (isUpdate == true)
-                        showToast("Data Updated Succesfully")
-                    else
-                        showToast("Data Not Updated")
-                } catch (e: Exception) {
+                try
+                {
+                    if (idTxt.text.isEmpty()||numberOfToolTxt.text.isEmpty()) {
+                        showDialog("Wypełnij pola", "ID oraz Numer narzędzia.")
+                    }
+                        else
+                    {
+                        dateTxt.setText(currentDate())
+                        dbHelper.updateData(
+                            idTxt.text.toString(),
+                            numberOfToolTxt.text.toString(),
+                            dateTxt.text.toString())
+                        showToast("Zaktualizowano")
+                    }
+                }
+                catch (e: Exception)
+                {
                     e.printStackTrace()
                     showToast(e.message.toString())
                 }
-            }
         }
     }
+
 
     fun handleDeletes()
     {
@@ -142,8 +155,17 @@ class MainActivity : AppCompatActivity()
         {
             try
             {
-                dbHelper.deleteData(idTxt.text.toString())
-                clearEditTexts()
+                val isDeleted = dbHelper.deleteData(idTxt.text.toString())
+                if (isDeleted > 0)
+                    showToast("Usunięto")
+                else
+                {
+                    if (idTxt.text.isEmpty())
+                        showToast("Wypełnij pole ID")
+                    else
+                        showToast("Brak wpisu")
+                    clearEditTexts()
+                }
             }
             catch (e: Exception)
             {
@@ -160,10 +182,9 @@ class MainActivity : AppCompatActivity()
             val res = dbHelper.allData
             if (res.count == 0)
             {
-                showDialog("Error", "No Data Found")
+                showDialog("Błąd", "Brak wpisów")
                 return@OnClickListener
             }
-
             val buffer = StringBuffer()
             while (res.moveToNext())
             {
@@ -172,8 +193,7 @@ class MainActivity : AppCompatActivity()
                 buffer.append("Nr narzedzia : " + res.getString(2) + "\n")
                 buffer.append("Data pobrania : " + res.getString(3) + "\n")
             }
-            showDialog("Data Listing", buffer.toString())
+            showDialog("Lista narzędzi", buffer.toString())
         })
     }
-
 }

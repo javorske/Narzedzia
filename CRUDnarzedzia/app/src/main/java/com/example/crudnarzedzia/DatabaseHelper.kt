@@ -21,21 +21,22 @@ class DatabaseHelper(context: Context) :
         onCreate(db)
     }
 
-    fun insertData(name: String, surname: String, marks: String) {
+    fun insertData(name: String, number: String, date: String) {
         val db = this.writableDatabase
         val contentValues = ContentValues()
         contentValues.put(COL_2, name)
-        contentValues.put(COL_3, surname)
-        contentValues.put(COL_4, marks)
+        contentValues.put(COL_3, number)
+        contentValues.put(COL_4, date)
         db.insert(TABLE_NAME, null, contentValues)
     }
 
-    fun updateData(id: String, name: String, surname: String, marks: String):
+    fun updateData(id: String, number: String, date: String):
             Boolean {
         val db = this.writableDatabase
         val contentValues = ContentValues()
         contentValues.put(COL_1, id)
-        contentValues.put(COL_3, surname)
+        contentValues.put(COL_3, number)
+        contentValues.put(COL_4, date)
         db.update(TABLE_NAME, contentValues, "ID = ?", arrayOf(id))
         return true
     }
